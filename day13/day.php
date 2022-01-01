@@ -72,19 +72,11 @@ function count_dots( $points ) {
 //}
 
 foreach ( $fold as $cord ) {
-	$from = array_key_first( $cord );
 	$length = array_values( $cord )[0];
+	$side = ( array_key_first( $cord ) == 'x' ) ? 0 : 1;
 
 	foreach ( $points as $key => $point ) {
-		if( $from == 'x' ) {
-			if( $point[0] > $length ) {
-				$points[$key][0] = $length * 2 - $point[0];
-			}
-		} else {
-			if( $point[1] > $length ) {
-				$points[$key][1] = $length * 2 - $point[1];
-			}
-		}
+		if( $point[$side] > $length ) $points[$key][$side] = $length * 2 - $point[$side];
 	}
 }
 
@@ -96,9 +88,9 @@ foreach ( $points as $point ) {
 for ( $y = 0; $y < 6; $y++ ) {
 	for ($x = 0; $x < 40; $x++) {
 		if( isset( $map[$y][$x]) ) {
-			echo '#';
+			echo '# ';
 		} else {
-			echo '.';
+			echo '. ';
 		}
 	}
 	echo PHP_EOL;
