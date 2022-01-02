@@ -1,10 +1,9 @@
 <?php
 
-require_once '../lib/lib.php';
+//require_once '../lib/lib.php';
 
 $input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
-$input = file( 'input2.txt', FILE_IGNORE_NEW_LINES );
-//$input = file( 'input3.txt', FILE_IGNORE_NEW_LINES );
+//$input = file( 'input2.txt', FILE_IGNORE_NEW_LINES );
 
 $height = count( $input );
 $width = strlen( $input[0] );
@@ -15,80 +14,88 @@ foreach ( $input as $item ) {
 	$map[] = $row;
 }
 
-global $shortest;
-$shortest = 99999;
-
-global $min;
-$min = [];
-
-$pos = [
-	'x' => 0,
-	'y' => 0
-];
-
-$data = [
-	'map' => $map,
-	'w' => $width,
-	'h' => $height,
-	'risk' => 0,
-];
-
-function take_step($pos, $data) {
-	global $shortest;
-	global $min;
-
-	// Add risk
-	$data['risk'] += $data['map'][$pos['y']][$pos['x']];
-	if( $data['risk'] >= $shortest ) return;
+define( 'ROW', strlen( $input[0] ) );
+define( 'COL', count( $input ) );
 
 
-	// Check if it is fastest way to this point
-	if( isset( $min[$pos['y']][$pos['x']] ) ) {
-		if( $min[$pos['y']][$pos['x']] < $data['risk'] ) return;
-	} else {
-		$min[$pos['y']][$pos['x']] = $data['risk'];
+// Structure for information of each cell
+class cell {
+	public $x;
+	public $y;
+	public $distance;
+
+	public function __construct( $x, $y, $distance ) {
+		$this->x = $x;
+		$this->y = $y;
+		$this->distance = $distance;
 	}
-
-
-	// Mark spot visited
-	$data['map'][$pos['y']][$pos['x']] = 'x';
-
-	// Finish path
-	if( $pos['y'] == $data['w'] - 1 && $pos['x'] == $data['h'] - 1 ) {
-		if( $data['risk'] < $shortest ) {
-			$shortest = $data['risk'];
-			echo $shortest . PHP_EOL;
-			return;
-		}
-	}
-
-	// up
-	if( $pos['y'] != 0 && $data['map'][$pos['y'] - 1][$pos['x']] != 'x' ) {
-		take_step( [ 'x' => $pos['x'], 'y' => $pos['y'] - 1 ], $data );
-	}
-
-	// right
-	if( $pos['x'] != $data['w'] - 1 && $data['map'][$pos['y']][$pos['x'] + 1] != 'x' ) {
-		take_step( [ 'x' => $pos['x'] + 1, 'y' => $pos['y'] ], $data );
-	}
-
-	// down
-	if( $pos['y'] != $data['h'] - 1 && $data['map'][$pos['y'] + 1][$pos['x']] != 'x' ) {
-		take_step( [ 'x' => $pos['x'], 'y' => $pos['y'] + 1 ], $data );
-	}
-
-	// left
-	if( $pos['x'] != 0 && $data['map'][$pos['y']][$pos['x'] - 1] != 'x' ) {
-		take_step( [ 'x' => $pos['x'] - 1, 'y' => $pos['y'] ], $data );
-	}
-
-	return;
 }
 
-take_step( $pos, $data);
+// Utility method to check whether a point is
+// inside the grid or not
+function isInsideGrid($i, $j) {
+	return ($i >= 0 && $i < ROW && $j >= 0 && $j < COL);
+}
 
-echo 'Part 1: ' . ($shortest - $map[0][0]) . PHP_EOL;
+// Sort function
+function sr( $a, $b ) {
+	if( $a->distance == $b->distance ) {
+		if( $a->x != $b->x ) {
+			return ( $a->x - $b->x );
+		} else {
+			return ( $a->y - $b->y );
+		}
 
-// 755 is to high
+	}
+	return ( $a->distance - $b->distance );
+}
 
-// echo 'Part 2: ' . $correct . PHP_EOL;
+// Method returns minimum cost to reach bottom
+// right from top left
+function shortest($grid, $row, $col) {
+
+	$dis = array_fill( 0, $col, array_fill( 0, $row, 0));
+
+	for ($i = 0; $i < $row; $i++) {
+	    for ( $j = 0; $j < $col; $j++ ) {
+		    $dis[ $i ][ $j ] = 1000000000;
+	    }
+    }
+
+    $dx = [-1, 0, 1, 0];
+    $dy = [0, 1, 0, -1];
+
+    $st = [];
+    $st[] = new cell(0, 0, 0);
+
+    $dis[0][0] = $grid[0][0];
+
+    while ( ! empty( $st ) ) {
+
+	    $k = $st[0];
+		unset( $st[0] );
+
+	    for ( $i = 0; $i < 4; $i++) {
+	        $x = $k->x + $dx[$i];
+	        $y = $k->y + $dy[$i];
+
+	        if (!isInsideGrid($x, $y))
+		        continue;
+
+	        if ($dis[$x][$y] > $dis[$k->x][$k->y] + $grid[$x][$y]  ) {
+
+		        $dis[$x][$y] = $dis[$k->x][$k->y] + $grid[$x][$y];
+		        $st[] = new cell($x, $y, $dis[$x][$y]);
+	        }
+        }
+
+	    usort($st, 'sr');
+    }
+
+    return $dis[$row - 1][$col - 1];
+}
+
+$shortest  = shortest( $map, ROW, COL );
+$shortest -= $map[0][0];
+
+echo 'Part 1: ' . $shortest . PHP_EOL;
