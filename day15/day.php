@@ -14,9 +14,8 @@ foreach ( $input as $item ) {
 	$map[] = $row;
 }
 
-define( 'ROW', strlen( $input[0] ) );
-define( 'COL', count( $input ) );
-
+define( 'ROW', strlen( $input[0] ) * 5 );
+define( 'COL', count( $input ) * 5 );
 
 // Structure for information of each cell
 class cell {
@@ -95,7 +94,31 @@ function shortest($grid, $row, $col) {
     return $dis[$row - 1][$col - 1];
 }
 
-$shortest  = shortest( $map, ROW, COL );
+//$shortest  = shortest( $map, ROW, COL );
+//$shortest -= $map[0][0];
+//
+//echo 'Part 1: ' . $shortest . PHP_EOL;
+
+$new_map = [];
+
+// Extend the new map by 5x5 tiles
+for( $k = 0; $k < 5; $k++ ) {
+	foreach ( $map as $row ) {
+		$new_row = [];
+		for ( $i = 0; $i < 5; $i ++ ) {
+			foreach ( $row as $cell ) {
+				$ele = $cell + $i + $k;
+				if ( $ele > 9 ) {
+					$ele = $ele % 9;
+				}
+				$new_row[] = $ele;
+			}
+		}
+		$new_map[] = $new_row;
+	}
+}
+
+$shortest  = shortest( $new_map, ROW, COL );
 $shortest -= $map[0][0];
 
-echo 'Part 1: ' . $shortest . PHP_EOL;
+echo 'Part 2: ' . $shortest . PHP_EOL;
