@@ -5,7 +5,7 @@ require_once '../lib/lib.php';
 $input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
 $input = $input[0];
 
-//$input = 'A0016C880162017C3686B18A3D4780';
+//$input = '9C0141080250320F1802104A08';
 
 // Convert input to binary
 $code = '';
@@ -18,7 +18,7 @@ foreach ( $input as $num ) {
 global $v;
 $v = 0;
 
-function parse_code( $bin, $parts = [] ) {
+function parse_code( $bin, $parts = [], $limit = [] ) {
 	global $v;
 
 	// Parse header
@@ -26,14 +26,19 @@ function parse_code( $bin, $parts = [] ) {
 	$type = substr( $bin, 3, 3);
 	$bin = substr( $bin, 6);
 
-	// Save the version to global
 	$v += (int) base_convert( $version, 2, 10);
 
 	// 4 - litral value
 	if( $type ==  '100') {
+		$num = '';
+		while( true ) {
+			$point = $bin[0];
+			$num .= substr( $bin, 1, 4);
+			$bin = substr( $bin, 5);
 
-		while( $bin[0] ) $bin = substr( $bin, 5);
-		$bin = substr( $bin, 5);
+			if( $point === '0' ) break;
+		}
+		$parts[] = base_convert( $num, 2, 10 );
 
 	} else {
 
@@ -44,15 +49,21 @@ function parse_code( $bin, $parts = [] ) {
 		// Detect packet length
 		if( $length == 11 ) $packets = detect_packet_length( $bin, $packets );
 
-		parse_code( substr( $bin, 0, $packets) );
+		$sub_parts = parse_code( substr( $bin, 0, $packets), [] );
 		$bin = substr( $bin,  $packets );
+
+		// Process sub-packets
+		if( !empty( $sub_parts ) ) {
+			$parts[] = parse_sub_parts( $type, $sub_parts );
+		}
 	}
 
-	// Parse next section of code if we have data
+
 	if( strlen( $bin ) >= 11 ) {
-		parse_code( $bin );
+		$parts = parse_code( $bin, $parts );
 	}
 
+	return $parts;
 }
 
 
@@ -99,9 +110,32 @@ function detect_packet_length( $bin, $count ) {
 	return $length;
 }
 
+function parse_sub_parts( $type, $sub_parts ) {
 
-parse_code( $code );
+	switch ( $type ) {
+		case '000': // 0
+			return array_sum( $sub_parts );
+		case '001': // 1
+			return array_reduce( $sub_parts, function( $carry, $item ){
+				if( is_null( $carry ) ) return $item;
+				return $carry * $item;
+			} );
+		case '010': // 2
+			return min( $sub_parts );
+		case '011': // 3
+			return max( $sub_parts );
+		case '101': // 5
+			return ( $sub_parts[0] > $sub_parts[1] ) ? 1 : 0;
+		case '110': // 6
+			return ( $sub_parts[0] < $sub_parts[1] ) ? 1 : 0;
+		case '111': // 7
+			return ( $sub_parts[0] == $sub_parts[1] ) ? 1 : 0;
+	}
 
-echo 'Part 1: ' . $v . PHP_EOL;
+	return null;
+}
 
-// echo 'Part 2: ' . $correct . PHP_EOL;
+
+$p = parse_code( $code );
+
+echo 'Part 2: ' . array_sum( $p ) . PHP_EOL;
