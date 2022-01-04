@@ -169,7 +169,7 @@ function calc_magnitude( $chain, $level = 4 ) {
 
 	return $chain;
 }
-
+$input_orig = $input;
 $state = array_shift( $input );
 foreach ( $input as $line ) {
 	$state = join( '', reduce_chain( str_split( '[' . $state . ',' . $line . ']' ) ) );
@@ -179,4 +179,22 @@ foreach ( $input as $line ) {
 
 echo 'Part 1: ' . calc_magnitude( str_split( $state ) ) . PHP_EOL;
 
-// echo 'Part 2: ' . $correct . PHP_EOL;
+
+$torun = [];
+foreach ( $input_orig as $x => $first ) {
+	foreach ( $input_orig as $y => $second ) {
+		if( $first == $second ) continue;
+		$torun[] = 	str_split( '[' . $first .  ',' . $second . ']' );
+		$torun[] = 	str_split( '[' . $second . ',' . $first  . ']' );
+	}
+}
+
+$vmax = 0;
+foreach ( $torun as $line ) {
+	$state = join( '', reduce_chain( $line ) );
+	$mag = calc_magnitude( str_split( $state ) );
+	if( $mag > $vmax ) $vmax = $mag;
+}
+
+
+echo 'Part 2: ' . $vmax . PHP_EOL;
