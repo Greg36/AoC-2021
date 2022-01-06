@@ -27,6 +27,42 @@ foreach ( $input as $line ) {
 $scans[] = $scan;
 
 
+
+function rotate( $points, $pitch, $roll, $yaw ) {
+	$cosa = (int) cos( deg2rad( $yaw ) );
+	$sina = (int) sin( deg2rad( $yaw ) );
+
+	$cosb = (int) cos( deg2rad( $pitch ) );
+	$sinb = (int) sin( deg2rad( $pitch ) );
+
+	$cosc = (int) cos( deg2rad( $roll ) );
+	$sinc = (int) sin( deg2rad( $roll ) );
+
+	$Axx = $cosa * $cosb;
+	$Axy = $cosa * $sinb * $sinc - $sina * $cosc;
+	$Axz = $cosa * $sinb * $cosc + $sina * $sinc;
+
+	$Ayx = $sina * $cosb;
+	$Ayy = $sina * $sinb * $sinc + $cosa * $cosc;
+	$Ayz = $sina * $sinb * $cosc - $cosa * $sinc;
+
+	$Azx = $sinb * -1;
+	$Azy = $cosb * $sinc;
+	$Azz = $cosb * $cosc;
+
+	foreach ( $points as &$point ) {
+		$px = $point[0];
+		$py = $point[1];
+		$pz = $point[2];
+
+		$point[0] = $Axx * $px + $Axy * $py + $Axz * $pz;
+		$point[1] = $Ayx * $px + $Ayy * $py + $Ayz * $pz;
+		$point[2] = $Azx * $px + $Azy * $py + $Azz * $pz;
+	}
+
+	return $points;
+}
+
 function get_deg( $deg ) {
 	if( $deg == 90 ) {
 		return [
@@ -74,6 +110,24 @@ function rotateY3D( $deg, $points ) {
 	return $points;
 }
 
+function flip_col( $a, $col ) {
+	foreach ( $col as $flip ) {
+		foreach ( $a as &$point ) {
+			$point[$flip] = $point[$flip] * -1;
+		}
+	}
+	return $a;
+}
+
+function swap_col( $a, $swap ) {
+	foreach ( $a as &$point ) {
+		$temp = $point;
+		$point[$swap[0]] = $temp[$swap[1]];
+		$point[$swap[1]] = $temp[$swap[0]];
+	}
+	return $a;
+}
+
 function label( $a, $b ) {
 	return "{$a['x']},{$a['y']},{$a['z']}|{$b['x']},{$b['y']},{$b['z']}";
 }
@@ -96,6 +150,9 @@ function calc_distance( $scan ) {
 	return $d;
 }
 
+
+
+
 function find_offset( $relations ) {
 	$a = [];
 	$b = [];
@@ -105,36 +162,84 @@ function find_offset( $relations ) {
 		$b[] = explode( ',', $relation );
 	}
 
-	// Check initial
 	$tmp = is_offset_correct( $a, $b );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateX3D( 90, $b ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateX3D( 180, $b ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateX3D( 270, $b ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 0, 90,  0   ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 0, 180, 0   ) );   if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 0, 270, 0   ) );   if( $tmp ) return $tmp;
 
-	$tmp = is_offset_correct( $a, rotateY3D( 90, $b) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateY3D( 90, rotateX3D( 90, $b  ) ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateY3D( 90, rotateX3D( 180, $b ) ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateY3D( 90, rotateX3D( 270, $b ) ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 0, 0,   90  ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 0, 90,  90  ) );  	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 0, 180, 90  ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 0, 270, 90  ) );	if( $tmp ) return $tmp;
 
-	$tmp = is_offset_correct( $a, rotateY3D( 180, $b) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateY3D( 180, rotateX3D( 90, $b  ) ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateY3D( 180, rotateX3D( 180, $b ) ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateY3D( 180, rotateX3D( 270, $b ) ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 0, 0,   180 ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 0, 90,  180 ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 0, 180, 180 ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 0, 270, 180 ) );	if( $tmp ) return $tmp;
 
-	$tmp = is_offset_correct( $a, rotateY3D( 270, $b) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateY3D( 270, rotateX3D( 90, $b  ) ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateY3D( 270, rotateX3D( 180, $b ) ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateY3D( 270, rotateX3D( 270, $b ) ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 0, 0,   270 ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 0, 90,  270 ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 0, 180, 270 ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 0, 270, 270 ) );	if( $tmp ) return $tmp;
 
-	$tmp = is_offset_correct( $a, rotateZ3D( 90, $b) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateZ3D( 90, rotateX3D( 90, $b  ) ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateZ3D( 90, rotateX3D( 180, $b ) ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateZ3D( 90, rotateX3D( 270, $b ) ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 90, 0,   0  ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 90, 90,  0  ) );   if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 90, 180, 0  ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 90, 270, 0  ) );	if( $tmp ) return $tmp;
 
-	$tmp = is_offset_correct( $a, rotateZ3D( 270, $b) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateZ3D( 270, rotateX3D( 90, $b  ) ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateZ3D( 270, rotateX3D( 180, $b ) ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotateZ3D( 270, rotateX3D( 270, $b ) ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 270, 0,   0 ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 270, 90,  0 ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 270, 180, 0 ) );	if( $tmp ) return $tmp;
+	$tmp = is_offset_correct( $a, rotate( $b, 270, 270, 0 ) );	if( $tmp ) return $tmp;
+
+//	$origb = $b;
+//	for ( $i = 0; $i < 6; $i++ ) {
+//		if( $i == 1 ) $b = swap_col( $b, [0,1] );
+//		if( $i == 2 ) $b = swap_col( swap_col( $b, [ 0, 2 ] ), [1,2]);
+//		if( $i == 3 ) $b = swap_col( $b, [1,2] );
+//		if( $i == 4 ) $b = swap_col( swap_col( $b, [ 1, 2 ] ), [0,2]);
+//		if( $i == 5 ) $b = swap_col( $b, [0,2] );
+//
+//		$tmp = is_offset_correct( $a, $b );	if( $tmp ) return $tmp;
+//		$tmp = is_offset_correct( $a, flip_col( $b, [0] ) ); if( $tmp ) return $tmp;
+//		$tmp = is_offset_correct( $a, flip_col( $b, [1] ) ); if( $tmp ) return $tmp;
+//		$tmp = is_offset_correct( $a, flip_col( $b, [2] ) ); if( $tmp ) return $tmp;
+//		$tmp = is_offset_correct( $a, flip_col( $b, [0,1] ) ); if( $tmp ) return $tmp;
+//		$tmp = is_offset_correct( $a, flip_col( $b, [0,2] ) ); if( $tmp ) return $tmp;
+//		$tmp = is_offset_correct( $a, flip_col( $b, [1,2] ) ); if( $tmp ) return $tmp;
+//		$tmp = is_offset_correct( $a, flip_col( $b, [0,1,2] ) ); if( $tmp ) return $tmp;
+//		$b = $origb;
+//	}
+
+
+//	$tmp = is_offset_correct( $a, rotateX3D( 90, $b ) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateX3D( 180, $b ) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateX3D( 270, $b ) );	if( $tmp ) return $tmp;
+
+//	$tmp = is_offset_correct( $a, rotateY3D( 90, $b) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateY3D( 90, rotateX3D( 90, $b  ) ) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateY3D( 90, rotateX3D( 180, $b ) ) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateY3D( 90, rotateX3D( 270, $b ) ) );	if( $tmp ) return $tmp;
+//
+//	$tmp = is_offset_correct( $a, rotateY3D( 180, $b) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateY3D( 180, rotateX3D( 90, $b  ) ) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateY3D( 180, rotateX3D( 180, $b ) ) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateY3D( 180, rotateX3D( 270, $b ) ) );	if( $tmp ) return $tmp;
+//
+//	$tmp = is_offset_correct( $a, rotateY3D( 270, $b) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateY3D( 270, rotateX3D( 90, $b  ) ) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateY3D( 270, rotateX3D( 180, $b ) ) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateY3D( 270, rotateX3D( 270, $b ) ) );	if( $tmp ) return $tmp;
+//
+//	$tmp = is_offset_correct( $a, rotateZ3D( 90, $b) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateZ3D( 90, rotateX3D( 90, $b  ) ) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateZ3D( 90, rotateX3D( 180, $b ) ) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateZ3D( 90, rotateX3D( 270, $b ) ) );	if( $tmp ) return $tmp;
+//
+//	$tmp = is_offset_correct( $a, rotateZ3D( 270, $b) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateZ3D( 270, rotateX3D( 90, $b  ) ) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateZ3D( 270, rotateX3D( 180, $b ) ) );	if( $tmp ) return $tmp;
+//	$tmp = is_offset_correct( $a, rotateZ3D( 270, rotateX3D( 270, $b ) ) );	if( $tmp ) return $tmp;
 
 
 
@@ -226,6 +331,15 @@ for ( $u = 0; $u < ( count( $distances ) ); $u++ ) {
 }
 
 $a = 'xd';
+
+// -20,-1133,1061
+
+var_dump( $translations[1][4]);
+die();
+
+var_dump( ( $translations[0][1]['x'] ) . ',' . ( $translations[0][1]['y'] ) . ',' . ( $translations[0][1]['z'] ) );
+var_dump( ( $translations[0][1]['x'] - $translations[1][4]['x'] ) . ',' . ( $translations[0][1]['y'] - $translations[1][4]['y'] ) . ',' . ( $translations[0][1]['z'] - $translations[1][4]['z'] ) );
+
 
 // echo 'Part 1: ' . $correct . PHP_EOL;
 
