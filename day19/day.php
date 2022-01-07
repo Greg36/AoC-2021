@@ -3,7 +3,7 @@
 require_once '../lib/lib.php';
 
 $input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
-$input = file( 'input2.txt', FILE_IGNORE_NEW_LINES );
+//$input = file( 'input2.txt', FILE_IGNORE_NEW_LINES );
 //$input = file( 'input3.txt', FILE_IGNORE_NEW_LINES );
 
 $scans = [];
@@ -27,6 +27,24 @@ foreach ( $input as $line ) {
 $scans[] = $scan;
 
 
+//function test_rotate( $a, $b, $c, $a1, $b1, $c1 ) {
+//	$man = [0, 90, 180, 270];
+//
+//	foreach ( $man as $first ) {
+//		foreach ( $man as $second ) {
+//			foreach ( $man as $third ) {
+//				$xd = rotate( [ [$a, $b, $c] ], $first, $second, $third );
+//				if( $xd[0][0] . $xd[0][1] . $xd[0][2] === $a1 . $b1 . $c1 ) {
+//					echo $first . ' ' . $second . ' ' . $third . PHP_EOL;
+//				}
+//			}
+//		}
+//	}
+//}
+//test_rotate( 686, 422, 578, -686, 422, -578);
+//test_rotate( 88, 113, -1104, -88, 113, 1104 );
+
+//die();
 
 function rotate( $points, $pitch, $roll, $yaw ) {
 	$cosa = (int) cos( deg2rad( $yaw ) );
@@ -63,70 +81,39 @@ function rotate( $points, $pitch, $roll, $yaw ) {
 	return $points;
 }
 
-function get_deg( $deg ) {
-	if( $deg == 90 ) {
-		return [
-			's' => 1,
-			'c' => 0
-		];
-	} else if( $deg == 180 ) {
-		return [
-			's' => 0,
-			'c' => -1
-		];
-	} else if( $deg == 270 ) {
-		return [
-			's' => -1,
-			'c' => 0
-		];
-	}
-	return false;
-}
+function get_translations( $translations, $target, $rotation = [], $parent = [], $parent_key = 0 ) {
+	global $translated;
 
-function rotateZ3D( $deg, $points ) {
-	$deg = get_deg( $deg );
-	foreach ( $points as &$point ) {
-		$point[0] = $point[0] * $deg['c'] - $point[1] * $deg['s'];
-		$point[1] = $point[1] * $deg['c'] + $point[0] * $deg['s'];
-	}
-	return $points;
-}
+	foreach ( $translations[ $target ] as $key => $translation ) {
+		if( $key == 0 ) continue;
+		if( ! isset( $translated[ $key ] ) ) {
 
-function rotateX3D( $deg, $points ) {
-	$deg = get_deg( $deg );
-	foreach ( $points as &$point ) {
-		$point[1] = $point[1] * $deg['c'] - $point[2] * $deg['s'];
-		$point[2] = $point[2] * $deg['c'] + $point[1] * $deg['s'];
-	}
-	return $points;
-}
+			if( $target == 0 ) {
+				$translated[ $key ] = $translation['offset'];
+			} else {
 
-function rotateY3D( $deg, $points ) {
-	$deg = get_deg( $deg );
-	foreach ( $points as &$point ) {
-		$point[0] = $point[0] * $deg['c'] + $point[2] * $deg['s'];
-		$point[2] = $point[2] * $deg['c'] - $point[0] * $deg['s'];
-	}
-	return $points;
-}
+				$rotated = array_values( $translation['offset'] );
+				if( !isset( $rotation[$parent_key] ) ) {
+					$rotation  = array($parent_key => $parent['rotate']) + $rotation;
+				}
 
-function flip_col( $a, $col ) {
-	foreach ( $col as $flip ) {
-		foreach ( $a as &$point ) {
-			$point[$flip] = $point[$flip] * -1;
+				foreach ( $rotation as $rot ) {
+					$rotated = rotate( [$rotated], $rot[0], $rot[1], $rot[2] )[0];
+				}
+
+				$translated[ $key ] = [
+					'x' => $translated[$target]['x'] + $rotated[0],
+					'y' => $translated[$target]['y'] + $rotated[1],
+					'z' => $translated[$target]['z'] + $rotated[2],
+					'rotation' => (array($key => $translation['rotate']) + $rotation)
+				];
+			}
+			get_translations( $translations, $key, $rotation, $translation, $key );
+
 		}
 	}
-	return $a;
 }
 
-function swap_col( $a, $swap ) {
-	foreach ( $a as &$point ) {
-		$temp = $point;
-		$point[$swap[0]] = $temp[$swap[1]];
-		$point[$swap[1]] = $temp[$swap[0]];
-	}
-	return $a;
-}
 
 function label( $a, $b ) {
 	return "{$a['x']},{$a['y']},{$a['z']}|{$b['x']},{$b['y']},{$b['z']}";
@@ -150,9 +137,6 @@ function calc_distance( $scan ) {
 	return $d;
 }
 
-
-
-
 function find_offset( $relations ) {
 	$a = [];
 	$b = [];
@@ -162,86 +146,42 @@ function find_offset( $relations ) {
 		$b[] = explode( ',', $relation );
 	}
 
-	$tmp = is_offset_correct( $a, $b );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 0, 90,  0   ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 0, 180, 0   ) );   if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 0, 270, 0   ) );   if( $tmp ) return $tmp;
+	$directions = [
+		[0,   0,   0   ],
+		[0,   90,  0   ],
+		[0,   180, 0   ],
+		[0,   270, 0   ],
+		[0,   0,   90  ],
+        [0,   90,  90  ],
+        [0,   180, 90  ],
+        [0,   270, 90  ],
+		[0,   0,   180 ],
+		[0,   90,  180 ],
+		[0,   180, 180 ],
+		[0,   270, 180 ],
+		[0,   0,   270 ],
+		[0,   90,  270 ],
+		[0,   180, 270 ],
+		[0,   270, 270 ],
+		[90,  0,   0   ],
+		[90,  90,  0   ],
+		[90,  180, 0   ],
+		[90,  270, 0   ],
+		[270, 0,   0   ],
+		[270, 90,  0   ],
+		[270, 180, 0   ],
+		[270, 270, 0   ]
+	];
 
-	$tmp = is_offset_correct( $a, rotate( $b, 0, 0,   90  ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 0, 90,  90  ) );  	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 0, 180, 90  ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 0, 270, 90  ) );	if( $tmp ) return $tmp;
-
-	$tmp = is_offset_correct( $a, rotate( $b, 0, 0,   180 ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 0, 90,  180 ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 0, 180, 180 ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 0, 270, 180 ) );	if( $tmp ) return $tmp;
-
-	$tmp = is_offset_correct( $a, rotate( $b, 0, 0,   270 ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 0, 90,  270 ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 0, 180, 270 ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 0, 270, 270 ) );	if( $tmp ) return $tmp;
-
-	$tmp = is_offset_correct( $a, rotate( $b, 90, 0,   0  ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 90, 90,  0  ) );   if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 90, 180, 0  ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 90, 270, 0  ) );	if( $tmp ) return $tmp;
-
-	$tmp = is_offset_correct( $a, rotate( $b, 270, 0,   0 ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 270, 90,  0 ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 270, 180, 0 ) );	if( $tmp ) return $tmp;
-	$tmp = is_offset_correct( $a, rotate( $b, 270, 270, 0 ) );	if( $tmp ) return $tmp;
-
-//	$origb = $b;
-//	for ( $i = 0; $i < 6; $i++ ) {
-//		if( $i == 1 ) $b = swap_col( $b, [0,1] );
-//		if( $i == 2 ) $b = swap_col( swap_col( $b, [ 0, 2 ] ), [1,2]);
-//		if( $i == 3 ) $b = swap_col( $b, [1,2] );
-//		if( $i == 4 ) $b = swap_col( swap_col( $b, [ 1, 2 ] ), [0,2]);
-//		if( $i == 5 ) $b = swap_col( $b, [0,2] );
-//
-//		$tmp = is_offset_correct( $a, $b );	if( $tmp ) return $tmp;
-//		$tmp = is_offset_correct( $a, flip_col( $b, [0] ) ); if( $tmp ) return $tmp;
-//		$tmp = is_offset_correct( $a, flip_col( $b, [1] ) ); if( $tmp ) return $tmp;
-//		$tmp = is_offset_correct( $a, flip_col( $b, [2] ) ); if( $tmp ) return $tmp;
-//		$tmp = is_offset_correct( $a, flip_col( $b, [0,1] ) ); if( $tmp ) return $tmp;
-//		$tmp = is_offset_correct( $a, flip_col( $b, [0,2] ) ); if( $tmp ) return $tmp;
-//		$tmp = is_offset_correct( $a, flip_col( $b, [1,2] ) ); if( $tmp ) return $tmp;
-//		$tmp = is_offset_correct( $a, flip_col( $b, [0,1,2] ) ); if( $tmp ) return $tmp;
-//		$b = $origb;
-//	}
-
-
-//	$tmp = is_offset_correct( $a, rotateX3D( 90, $b ) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateX3D( 180, $b ) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateX3D( 270, $b ) );	if( $tmp ) return $tmp;
-
-//	$tmp = is_offset_correct( $a, rotateY3D( 90, $b) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateY3D( 90, rotateX3D( 90, $b  ) ) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateY3D( 90, rotateX3D( 180, $b ) ) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateY3D( 90, rotateX3D( 270, $b ) ) );	if( $tmp ) return $tmp;
-//
-//	$tmp = is_offset_correct( $a, rotateY3D( 180, $b) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateY3D( 180, rotateX3D( 90, $b  ) ) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateY3D( 180, rotateX3D( 180, $b ) ) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateY3D( 180, rotateX3D( 270, $b ) ) );	if( $tmp ) return $tmp;
-//
-//	$tmp = is_offset_correct( $a, rotateY3D( 270, $b) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateY3D( 270, rotateX3D( 90, $b  ) ) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateY3D( 270, rotateX3D( 180, $b ) ) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateY3D( 270, rotateX3D( 270, $b ) ) );	if( $tmp ) return $tmp;
-//
-//	$tmp = is_offset_correct( $a, rotateZ3D( 90, $b) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateZ3D( 90, rotateX3D( 90, $b  ) ) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateZ3D( 90, rotateX3D( 180, $b ) ) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateZ3D( 90, rotateX3D( 270, $b ) ) );	if( $tmp ) return $tmp;
-//
-//	$tmp = is_offset_correct( $a, rotateZ3D( 270, $b) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateZ3D( 270, rotateX3D( 90, $b  ) ) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateZ3D( 270, rotateX3D( 180, $b ) ) );	if( $tmp ) return $tmp;
-//	$tmp = is_offset_correct( $a, rotateZ3D( 270, rotateX3D( 270, $b ) ) );	if( $tmp ) return $tmp;
-
-
+	foreach ( $directions as $direction ) {
+		$offseet = is_offset_correct( $a, rotate( $b, $direction[0], $direction[1], $direction[2] ) );
+		if( $offseet ) {
+			return [
+				'offset' => $offseet,
+				'rotate' => $direction
+			];
+		};
+	}
 
 	return false;
 }
@@ -264,14 +204,57 @@ function is_offset_correct( $a, $b ) {
 }
 
 
-function translate_scan_by_offset( $scan, $offset ) {
+
+function parse_vector( $translations, $vector ) {
+
+	$stack = [];
+	// See if we have the last to zero vector
+	if( isset( $translations[0][$vector] ) ) {
+		$offset = $translations[0][$vector]['offset'];
+	} else {
+		$a ='xd';
+	}
+
+
+	return $offset;
+}
+
+function translate_scan_by_offset( $scan, $vector, $i, $translations ) {
 	$translated = [];
+
+	if( !isset( $vector['rotation'] ) ) {
+		$vector['rotation'][] = $translations[0][$i]['rotate'];
+	}
+
+	$temp = [];
 	foreach ( $scan as $item ) {
-		$translated[] = [
-			'x' => $item['x'] + $offset[0],
-			'y' => $item['y'] + $offset[1],
-			'z' => $item['z'] + $offset[2]
+		$temp[] = [
+			$item['x'], $item['y'], $item['z']
 		];
+
+	}
+	$rotated = $temp;
+	foreach ( $vector['rotation'] as $rot ) {
+		$rotated = rotate( $rotated, $rot[0], $rot[1], $rot[2] );
+	}
+	$scan = [];
+	foreach ( $rotated as $item ) {
+		$scan[] = [
+			'x' => $item[0],
+			'y' => $item[1],
+			'z' => $item[2]
+		];
+	}
+
+
+	foreach ( $scan as $item ) {
+
+		$translated[] = [
+			'x' => $item['x'] + $vector['x'],
+			'y' => $item['y'] + $vector['y'],
+			'z' => $item['z'] + $vector['z']
+		];
+		$a = 'xd';
 	}
 	return $translated;
 }
@@ -330,15 +313,82 @@ for ( $u = 0; $u < ( count( $distances ) ); $u++ ) {
 
 }
 
-$a = 'xd';
+
+global $translated;
+$translated = [];
+get_translations( $translations, 0 );
+
+
+// Translate scans
+for ( $i = 1; $i < ( count( $scans ) ); $i++ ) {
+	$scans[$i] = translate_scan_by_offset( $scans[$i], $translated[$i], $i, $translations );
+}
+
+$probes = [];
+foreach ( $scans as $scan ) {
+	foreach ( $scan as $item ) {
+		$probes[] =  join( ',', $item ) . PHP_EOL;
+	}
+}
+
+echo 'Part 1: ' . count( array_count_values( $probes)) . PHP_EOL;
+
+
+//die();
+//
+//
+//
+//
+//$temp = [];
+//foreach ( $test1 as $item ) {
+//	$temp[] = [
+//		$item['x'] + 68, $item['y'] + -1246, $item['z'] +  -43
+//	];
+//
+//}
+//$rotated = rotate( $temp, 0, 180, 180 );
+////$sc = [];
+////foreach ( $rotated as $item ) {
+////	$sc[] = [
+////		'x' => $item[0],
+////		'y' => $item[1],
+////		'z' => $item[2]
+////	];
+////}
+//
+////foreach ( $sc as $item ) {
+////
+////	$loloza[] = [
+////		'x' => $item['x'] + 68,
+////		'y' => $item['y'] + -1246,
+////		'z' => $item['z'] + -43
+////	];
+////}
+//
+//
+//$fin  = [];
+//
+//foreach ( $test1 as $item ) {
+//	$fin[] = join( ',', $item );
+//}
+//
+//foreach ( $rotated as $item ) {
+//	$fin[] = join( ',', $item );
+//}
+//
+//function get_duplicates ($array) {
+//	return array_unique( array_diff_assoc( $array, array_unique( $array ) ) );
+//}
+//
+//$a = 'xd';
 
 // -20,-1133,1061
 
-var_dump( $translations[1][4]);
-die();
+//var_dump( $translations[1][4]);
+//die();
 
-var_dump( ( $translations[0][1]['x'] ) . ',' . ( $translations[0][1]['y'] ) . ',' . ( $translations[0][1]['z'] ) );
-var_dump( ( $translations[0][1]['x'] - $translations[1][4]['x'] ) . ',' . ( $translations[0][1]['y'] - $translations[1][4]['y'] ) . ',' . ( $translations[0][1]['z'] - $translations[1][4]['z'] ) );
+//var_dump( ( $translations[0][1]['offset']['x'] ) . ',' . ( $translations[0][1]['offset']['y'] ) . ',' . ( $translations[0][1]['offset']['z'] ) );
+//var_dump( ( $translations[1][4]['x'] - $translations[0][1]['x']  ) . ',' . ( $translations[1][4]['y'] - $translations[0][1]['y'] ) . ',' . ( $translations[1][4]['z'] - $translations[0][1]['z'] ) );
 
 
 // echo 'Part 1: ' . $correct . PHP_EOL;
