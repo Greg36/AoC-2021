@@ -334,6 +334,47 @@ foreach ( $scans as $scan ) {
 echo 'Part 1: ' . count( array_count_values( $probes)) . PHP_EOL;
 
 
+
+
+function distance($vector1, $vector2) {
+	$n = count($vector1);
+	$sum = 0;
+	for ($i = 0; $i < $n; $i++) {
+		$sum += abs($vector1[$i] - $vector2[$i]);
+	}
+	return $sum;
+}
+
+
+
+$translated[] = [
+	'x' => 0,
+	'y' => 0,
+	'z' => 0,
+];
+$manhattan    = [];
+
+foreach ( $translated as $first ) {
+	foreach ( $translated  as $second ) {
+		unset( $first['rotation'] );
+		unset( $second['rotation'] );
+		$manhattan[] = [
+			array_values( $first ),
+			array_values( $second )
+		];
+	}
+}
+
+$max = 0;
+foreach ( $manhattan as $key => $route ) {
+	$dist = distance( $route[0], $route[1] );
+	if( $dist > $max ) $max = $dist;
+}
+
+ echo 'Part 2: ' . $max . PHP_EOL;
+
+
+
 //die();
 //
 //
