@@ -6,9 +6,6 @@ $input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
 //$input = file( 'input2.txt', FILE_IGNORE_NEW_LINES );
 //$input = file( 'input3.txt', FILE_IGNORE_NEW_LINES );
 
-$scans = [];
-$scan = [];
-
 // Prepare scans arrays
 foreach ( $input as $line ) {
 	if( strpos( $line, '---') === 0 ) continue;
@@ -16,35 +13,10 @@ foreach ( $input as $line ) {
 		$scans[] = $scan;
 		$scan = [];
 	} else {
-		$cords = explode( ',', $line );
-		$scan[] = [
-			'x' => $cords[0],
-			'y' => $cords[1],
-			'z' => $cords[2]
-		];
+		$scan[] = explode( ',', $line );
 	}
 }
 $scans[] = $scan;
-
-
-//function test_rotate( $a, $b, $c, $a1, $b1, $c1 ) {
-//	$man = [0, 90, 180, 270];
-//
-//	foreach ( $man as $first ) {
-//		foreach ( $man as $second ) {
-//			foreach ( $man as $third ) {
-//				$xd = rotate( [ [$a, $b, $c] ], $first, $second, $third );
-//				if( $xd[0][0] . $xd[0][1] . $xd[0][2] === $a1 . $b1 . $c1 ) {
-//					echo $first . ' ' . $second . ' ' . $third . PHP_EOL;
-//				}
-//			}
-//		}
-//	}
-//}
-//test_rotate( 686, 422, 578, -686, 422, -578);
-//test_rotate( 88, 113, -1104, -88, 113, 1104 );
-
-//die();
 
 function rotate( $points, $pitch, $roll, $yaw ) {
 	$cosa = (int) cos( deg2rad( $yaw ) );
@@ -102,9 +74,9 @@ function get_translations( $translations, $target, $rotation = [], $parent = [],
 				}
 
 				$translated[ $key ] = [
-					'x' => $translated[$target]['x'] + $rotated[0],
-					'y' => $translated[$target]['y'] + $rotated[1],
-					'z' => $translated[$target]['z'] + $rotated[2],
+					$translated[$target][0] + $rotated[0],
+					$translated[$target][1] + $rotated[1],
+					$translated[$target][2] + $rotated[2],
 					'rotation' => (array($key => $translation['rotate']) + $rotation)
 				];
 			}
@@ -114,13 +86,12 @@ function get_translations( $translations, $target, $rotation = [], $parent = [],
 	}
 }
 
-
 function label( $a, $b ) {
-	return "{$a['x']},{$a['y']},{$a['z']}|{$b['x']},{$b['y']},{$b['z']}";
+	return join( ',', $a ) . '|' . join( ',', $b );
 }
 
 function cord_distance( $a, $b ) {
-	return sqrt( pow( $b['x'] - $a['x'], 2 ) + pow( $b['y'] - $a['y'], 2 ) + pow( $b['z'] - $a['z'], 2 ) );
+	return sqrt( pow( $b[0] - $a[0], 2 ) + pow( $b[1] - $a[1], 2 ) + pow( $b[2] - $a[2], 2 ) );
 }
 
 function calc_distance( $scan ) {
@@ -196,27 +167,7 @@ function is_offset_correct( $a, $b ) {
 		if( $y - ( $a[$i][1] - $b[$i][1] ) ) return false;
 		if( $z - ( $a[$i][2] - $b[$i][2] ) ) return false;
 	}
-	return [
-		'x' => $x,
-		'y' => $y,
-		'z' => $z
-	];
-}
-
-
-
-function parse_vector( $translations, $vector ) {
-
-	$stack = [];
-	// See if we have the last to zero vector
-	if( isset( $translations[0][$vector] ) ) {
-		$offset = $translations[0][$vector]['offset'];
-	} else {
-		$a ='xd';
-	}
-
-
-	return $offset;
+	return [ $x, $y, $z ];
 }
 
 function translate_scan_by_offset( $scan, $vector, $i, $translations ) {
@@ -226,65 +177,43 @@ function translate_scan_by_offset( $scan, $vector, $i, $translations ) {
 		$vector['rotation'][] = $translations[0][$i]['rotate'];
 	}
 
-	$temp = [];
-	foreach ( $scan as $item ) {
-		$temp[] = [
-			$item['x'], $item['y'], $item['z']
-		];
-
-	}
-	$rotated = $temp;
 	foreach ( $vector['rotation'] as $rot ) {
-		$rotated = rotate( $rotated, $rot[0], $rot[1], $rot[2] );
+		$scan = rotate( $scan, $rot[0], $rot[1], $rot[2] );
 	}
-	$scan = [];
-	foreach ( $rotated as $item ) {
-		$scan[] = [
-			'x' => $item[0],
-			'y' => $item[1],
-			'z' => $item[2]
-		];
-	}
-
 
 	foreach ( $scan as $item ) {
-
 		$translated[] = [
-			'x' => $item['x'] + $vector['x'],
-			'y' => $item['y'] + $vector['y'],
-			'z' => $item['z'] + $vector['z']
+			$item[0] + $vector[0],
+			$item[1] + $vector[1],
+			$item[2] + $vector[2]
 		];
-		$a = 'xd';
 	}
 	return $translated;
 }
 
 // Get all distances between points
-$distances = [];
 foreach( $scans as $a => $scan ) {
 	$distances[$a] = calc_distance( $scan );
 }
 
-
-// While we still have untranslated arrays
-//while( count( $distances ) > 1 ) {
-$translations = [];
-
+// Find all matching points between the scans
 for ( $u = 0; $u < ( count( $distances ) ); $u++ ) {
 
-	// Check each scan for overlapping scans
 	for ( $s = 0; $s < ( count( $distances ) ); $s++ ) {
 
 		if( $u == $s ) continue;
 
+		// We have overlap
+		$overlap = array_intersect( $distances[$u], $distances[$s] );
+		if( count( $overlap ) < 12 ) continue;
+
 		// Find all lines with same length
 		$same = [];
-		foreach ( $distances[$u] as $i => $first ) {
-			foreach ( $distances[$s] as $k => $second ) {
-				if( $first == $second ) {
-					$same[] = [ $i, $k,	$first ];
-				}
-			}
+		foreach ( $overlap as $key => $item ) {
+			$same[] = [
+				$key,
+				array_search( $distances[$u][ $key ], $distances[$s] ),
+			];
 		}
 
 		// Find matching points for each length
@@ -307,23 +236,22 @@ for ( $u = 0; $u < ( count( $distances ) ); $u++ ) {
 
 		// Scanners overlap when there are 12 or more overlapping points
 		if( count( $relation ) >= 12 ) {
-			$translations[$u][$s] = find_offset( $relation );;
+			$translations[$u][$s] = find_offset( $relation );
 		}
 	}
-
 }
 
-
+// Translate all vectors
 global $translated;
 $translated = [];
 get_translations( $translations, 0 );
 
-
-// Translate scans
+// Translate scans based on vectors
 for ( $i = 1; $i < ( count( $scans ) ); $i++ ) {
 	$scans[$i] = translate_scan_by_offset( $scans[$i], $translated[$i], $i, $translations );
 }
 
+// Get all probes
 $probes = [];
 foreach ( $scans as $scan ) {
 	foreach ( $scan as $item ) {
@@ -331,8 +259,7 @@ foreach ( $scans as $scan ) {
 	}
 }
 
-echo 'Part 1: ' . count( array_count_values( $probes)) . PHP_EOL;
-
+echo 'Part 1: ' . count( array_count_values( $probes) ) . PHP_EOL;
 
 
 
@@ -345,15 +272,7 @@ function distance($vector1, $vector2) {
 	return $sum;
 }
 
-
-
-$translated[] = [
-	'x' => 0,
-	'y' => 0,
-	'z' => 0,
-];
-$manhattan    = [];
-
+$translated[] = [ 0, 0,0 ];
 foreach ( $translated as $first ) {
 	foreach ( $translated  as $second ) {
 		unset( $first['rotation'] );
@@ -371,67 +290,4 @@ foreach ( $manhattan as $key => $route ) {
 	if( $dist > $max ) $max = $dist;
 }
 
- echo 'Part 2: ' . $max . PHP_EOL;
-
-
-
-//die();
-//
-//
-//
-//
-//$temp = [];
-//foreach ( $test1 as $item ) {
-//	$temp[] = [
-//		$item['x'] + 68, $item['y'] + -1246, $item['z'] +  -43
-//	];
-//
-//}
-//$rotated = rotate( $temp, 0, 180, 180 );
-////$sc = [];
-////foreach ( $rotated as $item ) {
-////	$sc[] = [
-////		'x' => $item[0],
-////		'y' => $item[1],
-////		'z' => $item[2]
-////	];
-////}
-//
-////foreach ( $sc as $item ) {
-////
-////	$loloza[] = [
-////		'x' => $item['x'] + 68,
-////		'y' => $item['y'] + -1246,
-////		'z' => $item['z'] + -43
-////	];
-////}
-//
-//
-//$fin  = [];
-//
-//foreach ( $test1 as $item ) {
-//	$fin[] = join( ',', $item );
-//}
-//
-//foreach ( $rotated as $item ) {
-//	$fin[] = join( ',', $item );
-//}
-//
-//function get_duplicates ($array) {
-//	return array_unique( array_diff_assoc( $array, array_unique( $array ) ) );
-//}
-//
-//$a = 'xd';
-
-// -20,-1133,1061
-
-//var_dump( $translations[1][4]);
-//die();
-
-//var_dump( ( $translations[0][1]['offset']['x'] ) . ',' . ( $translations[0][1]['offset']['y'] ) . ',' . ( $translations[0][1]['offset']['z'] ) );
-//var_dump( ( $translations[1][4]['x'] - $translations[0][1]['x']  ) . ',' . ( $translations[1][4]['y'] - $translations[0][1]['y'] ) . ',' . ( $translations[1][4]['z'] - $translations[0][1]['z'] ) );
-
-
-// echo 'Part 1: ' . $correct . PHP_EOL;
-
-// echo 'Part 2: ' . $correct . PHP_EOL;
+echo 'Part 2: ' . $max . PHP_EOL;
