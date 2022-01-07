@@ -77,6 +77,7 @@ function enchance_image( $input, $algo, $outer ) {
 
 $outer = 0;
 
+$original = $pixels;
 for ($i = 0; $i < 2; $i++) {
 	$output = enchance_image( $pixels, $algo, $outer );
 	$pixels = $output[0];
@@ -88,4 +89,20 @@ for ($i = 0; $i < 2; $i++) {
 
 echo 'Part 1: ' . $lights . PHP_EOL;
 
-// echo 'Part 2: ' . $correct . PHP_EOL;
+
+
+$pixels = $original;
+$outer = 0;
+
+for ($i = 0; $i < 50; $i++) {
+	$output = enchance_image( $pixels, $algo, $outer );
+	$pixels = $output[0];
+	$lights = $output[1];
+
+	$bin   = str_pad( "", 9, $outer );
+	$outer = $algo[ base_convert( $bin, 2, 10 ) ];
+}
+
+
+echo 'Part 2: ' . $lights . PHP_EOL;
+
