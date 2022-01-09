@@ -243,10 +243,10 @@ eql x 0
 mul y 0
 add y 25
 mul y x
-add y 1
-mul z y
-mul y 0
-add y w
-add y 9
-mul y x
-add z y
+add y 1 // y has to be -1 or z be 0
+mul z y // y or z has to be 0
+mul y 0 //
+add y w // w has to be -9
+add y 9 //   y must be -9
+mul y x //   either y or x has to be 0
+add z y // z and y have to be 0
