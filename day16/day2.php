@@ -1,11 +1,7 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 $input = $input[0];
-
-//$input = '9C0141080250320F1802104A08';
 
 // Convert input to binary
 $code = '';
@@ -18,7 +14,7 @@ foreach ( $input as $num ) {
 global $v;
 $v = 0;
 
-function parse_code( $bin, $parts = [], $limit = [] ) {
+function parse_code( $bin, $parts = [] ) {
 	global $v;
 
 	// Parse header
@@ -69,6 +65,7 @@ function parse_code( $bin, $parts = [], $limit = [] ) {
 
 function detect_packet_length( $bin, $count ) {
 	$length = 0;
+
 	while( $count ) {
 		$type = substr( $bin, 3, 3);
 		$bin = substr( $bin, 6);
@@ -82,6 +79,7 @@ function detect_packet_length( $bin, $count ) {
 			}
 			$bin = substr( $bin, 5);
 			$length += 5;
+
 		} else {
 			$l = ( $bin[0] === '0' ) ? 15 : 11;
 			$length += $l;

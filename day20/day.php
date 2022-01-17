@@ -1,9 +1,6 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
-//$input = file( 'input2.txt', FILE_IGNORE_NEW_LINES );
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
 $algo = $input[0];
 $algo = str_replace( array( '#', '.' ), array( 1, 0 ), $algo );
@@ -23,32 +20,6 @@ foreach ( $image as $y => $row ) {
 
 	}
 }
-
-
-/*
- * Get image boundaries with 2px offset
- */
-//function find_boundaries( $input ) {
-//	$min_x = 0;
-//	$max_x = 0;
-//	$min_y = min( array_keys( $input ) );
-//	$max_y = max( array_keys ($input ) );
-//
-//	foreach ( $input as $row ) {
-//		$min = min( array_keys( $row ) );
-//		if( $min < $min_x ) $min_x = $min;
-//
-//		$max = max( array_keys( $row ) );
-//		if( $max > $max_x ) $max_x = $max;
-//	}
-//
-//	return[
-//		'min_x' => $min_x - 1,
-//		'max_x' => $max_x + 1,
-//		'min_y' => $min_y - 1,
-//		'max_y' => $max_y + 1
-//	];
-//}
 
 function enchance_image( $input, $algo, $outer ) {
 	$output = [];
@@ -75,9 +46,12 @@ function enchance_image( $input, $algo, $outer ) {
 	return [ $output, $lights ];
 }
 
-$outer = 0;
 
+// PART 1
+
+$outer = 0;
 $original = $pixels;
+
 for ($i = 0; $i < 2; $i++) {
 	$output = enchance_image( $pixels, $algo, $outer );
 	$pixels = $output[0];
@@ -90,6 +64,7 @@ for ($i = 0; $i < 2; $i++) {
 echo 'Part 1: ' . $lights . PHP_EOL;
 
 
+// PART 2
 
 $pixels = $original;
 $outer = 0;
@@ -102,7 +77,6 @@ for ($i = 0; $i < 50; $i++) {
 	$bin   = str_pad( "", 9, $outer );
 	$outer = $algo[ base_convert( $bin, 2, 10 ) ];
 }
-
 
 echo 'Part 2: ' . $lights . PHP_EOL;
 

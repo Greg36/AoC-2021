@@ -1,15 +1,13 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
-//$input = file( 'input2.txt', FILE_IGNORE_NEW_LINES );
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
 $points = [];
 foreach ( $input as $item ) {
 	$points[] = explode( ',', $item );
 }
 
+// Folds from the input
 $fold = [
 	['x' => 655],
 	['y' => 447],
@@ -25,16 +23,8 @@ $fold = [
 	['y' => 6]
 ];
 
-//$fold = [
-//	['y' => 7],
-//	['x' => 5]
-//];
 
-//$a= [0,1,2,3,4,5,6];
-//$x = 3;
-//
-//$k = array_slice( $a, 0, $x);
-//$c = array_slice( array_reverse( $a ), 0, $x);
+// PART 1
 
 function count_dots( $points ) {
 	$map = [];
@@ -48,28 +38,29 @@ function count_dots( $points ) {
 	return $dots;
 }
 
+// Do a single fold
+$cord = $fold[0];
+$from = array_key_first( $cord );
+$length = array_values( $cord )[0];
 
-//foreach ( $fold as $cord ) {
-//	$from = array_key_first( $cord );
-//	$length = array_values( $cord )[0];
-//
-//	foreach ( $points as $key => $point ) {
-//		if( $from == 'x' ) {
-//			if( $point[0] > $length ) {
-//				$points[$key][0] = $length * 2 - $point[0];
-//			}
-//		} else {
-//			if( $point[1] > $length ) {
-//				$points[$key][1] = $length * 2 - $point[1];
-//			}
-//		}
-//	}
-//
-//	$dots = count_dots( $points );
-//	 echo 'Part 1: ' . $dots . PHP_EOL;
-//	 die();
-//
-//}
+foreach ( $points as $key => $point ) {
+	if( $from == 'x' ) {
+		if( $point[0] > $length ) {
+			$points[$key][0] = $length * 2 - $point[0];
+		}
+	} else {
+		if( $point[1] > $length ) {
+			$points[$key][1] = $length * 2 - $point[1];
+		}
+	}
+}
+
+$dots = count_dots( $points );
+
+echo 'Part 1: ' . $dots . PHP_EOL;
+
+
+// PART 2
 
 foreach ( $fold as $cord ) {
 	$length = array_values( $cord )[0];
@@ -80,11 +71,15 @@ foreach ( $fold as $cord ) {
 	}
 }
 
+// Plot points on the map
 $map = [];
 foreach ( $points as $point ) {
 	$map[$point[1]][$point[0]] = 'x';
 }
 
+
+echo 'Part 2: ' . PHP_EOL;
+// Show the code
 for ( $y = 0; $y < 6; $y++ ) {
 	for ($x = 0; $x < 40; $x++) {
 		if( isset( $map[$y][$x]) ) {
@@ -95,9 +90,3 @@ for ( $y = 0; $y < 6; $y++ ) {
 	}
 	echo PHP_EOL;
 }
-
-
-
-
-
-// echo 'Part 2: ' . $correct . PHP_EOL;

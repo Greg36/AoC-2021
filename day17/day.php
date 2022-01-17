@@ -1,25 +1,16 @@
 <?php
 
-require_once '../lib/lib.php';
-
+// Input values
 $x = [50,76];
 $y = [-162, -134];
-
-
-// exaple
-//$x = [20, 30];
-//$y = [-10, -5];
-
 
 define( 'X', $x );
 define( 'Y', $y );
 
-
-// negative y value cannot be greater the height of the area
-// when the current position is in y's range
-
 // X velocity cannot be greater than distance to right side of target's area
 $x_max = max( $x );
+
+// X velocity loosing 1 each step must at least reach left side of target's area
 $x_min = get_min_x( min( $x ) );
 
 
@@ -100,10 +91,6 @@ for ($i = $x_min; $i <= 64; $i++) {
 	}
 }
 
-
-// 1406 is to high
-// 783 is to low
-
 echo 'Part 1: ' . $max_y . PHP_EOL;
 
- echo 'Part 2: ' . count( $in_target ) . PHP_EOL;
+echo 'Part 2: ' . count( $in_target ) . PHP_EOL;

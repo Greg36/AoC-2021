@@ -1,10 +1,6 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
-//$input = file( 'input2.txt', FILE_IGNORE_NEW_LINES );
-//$input = file( 'input3.txt', FILE_IGNORE_NEW_LINES );
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
 $all = [];
 foreach ( $input as $item ) {
@@ -20,58 +16,58 @@ foreach ( $all as $route ) {
 }
 
 
-//global $paths;
-//$paths = 0;
-//
-//function find_path( $node, $dir ) {
-//	global $paths;
-//
-//	// Dead end
-//	if( empty( $dir[ $node ] ) ) return;
-//
-//	$goto = $dir[$node];
-//
-//	// End found
-//	if( $node == 'end' ) {
-//		$paths++;
-//		return;
-//	}
-//
-//	// Remove small cave
-//	if( ctype_lower($node) ) unset( $dir[$node] );
-//
-//	foreach ( $goto as $route ) {
-//		if( $route == $node ) continue;
-//		find_path( $route, $dir);
-//	}
-//
-//}
-//find_path( 'start', $dir );
-
-
-// echo 'Part 1: ' . $paths . PHP_EOL;
-
-
-
+// PART 1
 global $paths;
 $paths = 0;
 
-function find_path( $node, $dir, $flag, $r ) {
-	global $paths;
-
-	$r[] = $node;
+function find_path( $node, $dir, $paths = 0 ) {
 
 	// Dead end
-	if( empty( $dir[ $node ] ) ) return;
+	if( empty( $dir[ $node ] ) ) return $paths;
+
+	$goto = $dir[$node];
+
+	// End found
+	if( $node == 'end' ) {
+		$paths++;
+		return $paths;
+	}
+
+	// Remove small cave
+	if( ctype_lower($node) ) unset( $dir[$node] );
+
+	foreach ( $goto as $route ) {
+		if( $route == $node ) continue;
+		$paths = find_path( $route, $dir, $paths );
+	}
+
+	return $paths;
+}
+$paths = find_path( 'start', $dir );
+
+echo 'Part 1: ' . $paths . PHP_EOL;
+
+
+// PART 2
+
+function find_path_allow_twice( $node, $dir, $visited_tiwce = false, $visited = [], $paths = 0 ) {
+	$visited[] = $node;
+
+	// Dead end
+	if( empty( $dir[ $node ] ) ) return $paths;
 
 	$goto = $dir[$node];
 
 	// Allow entering small cave twice only one time
 	if( ctype_lower($node) ) {
-		$ct = array_count_values( $r );
+		$ct = array_count_values( $visited );
+
 		if( isset( $ct[$node] ) && $ct[$node] == 2 ) {
-			$flag = true;
-			foreach ( $r as $item ) {
+			$visited_tiwce = true;
+
+			// If we already visited any small cave two times
+			// remove all small caves from future routes
+			foreach ( $visited as $item ) {
 				if( ctype_lower( $item ) ) {
 					unset( $goto[$item] );
 					unset( $dir[$item] );
@@ -83,11 +79,11 @@ function find_path( $node, $dir, $flag, $r ) {
 	// End found
 	if( $node == 'end' ) {
 		$paths++;
-		return;
+		return $paths;
 	}
 
-	// Remove small cave
-	if( ctype_lower($node) && $flag ) {
+	// Remove small and start caves
+	if( ctype_lower($node) && $visited_tiwce ) {
 		unset( $dir[ $node ] );
 	} else if( $node == 'start' ) {
 		unset( $dir[ $node ] );
@@ -95,10 +91,12 @@ function find_path( $node, $dir, $flag, $r ) {
 
 	foreach ( $goto as $route ) {
 		if( $route == $node ) continue;
-		find_path( $route, $dir, $flag, $r );
+		$paths = find_path_allow_twice( $route, $dir, $visited_tiwce, $visited, $paths );
 	}
 
+	return $paths;
 }
-find_path( 'start', $dir, false, [] );
 
- echo 'Part 2: ' . $paths . PHP_EOL;
+$paths = find_path_allow_twice( 'start', $dir );
+
+echo 'Part 2: ' . $paths . PHP_EOL;

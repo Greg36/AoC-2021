@@ -1,15 +1,9 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
 
-
-//$input = [];
-//$input[] = 'acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf';
-
-
+// PART 1
 
 $data = [];
 
@@ -21,29 +15,44 @@ foreach ( $input as $item ) {
 	];
 }
 
-//$nums = 0;
-//foreach ( $data as $item ) {
-//	foreach ( $item['out'] as $signal ) {
-//		$count = strlen( trim( $signal ) );
-//		if( $count === 2 || $count === 3 || $count === 4 || $count === 7 ) $nums++;
-//	}
-//}
-//
-// echo 'Part 1: ' . $nums . PHP_EOL;
+$nums = 0;
+foreach ( $data as $item ) {
+	foreach ( $item['out'] as $signal ) {
+		$count = strlen( trim( $signal ) );
+		if( $count === 2 || $count === 3 || $count === 4 || $count === 7 ) $nums++;
+	}
+}
 
-/*
- * A 0
- * B 1
- * C 2
- * D 3
- * E 4
- * F 5
- * G 6
- */
+echo 'Part 1: ' . $nums . PHP_EOL;
+
+
+function count_number( $sig, $map ) {
+
+	$signal = [];
+	foreach ( str_split( $sig ) as $letter ) {
+		$signal[] = $map[$letter];
+	}
+	sort( $signal );
+	$signal = join( '', $signal);
+
+	switch ($signal) {
+		case 'abcdef':  return 0;
+		case 'bc':      return 1;
+		case 'abdeg':   return 2;
+		case 'abcdg':   return 3;
+		case 'bcfg':    return 4;
+		case 'acdfg':   return 5;
+		case 'acdefg':  return 6;
+		case 'abc':     return 7;
+		case 'abcdefg': return 8;
+		case 'abcdfg':  return 9;
+	}
+
+	return false;
+}
+
 
 $sum = 0;
-
-
 foreach ( $data as $signal ) {
 
 	$map = [];
@@ -59,16 +68,16 @@ foreach ( $data as $signal ) {
 	// F | G
 	$fg = array_values( array_diff( $prop[4][0], $prop[2][0] ) );
 	foreach ( $prop[5] as $item ) {
-		if( isset( array_values( array_diff( $fg, $item  ) )[0] ) ) {
-			$map['f'] = array_values( array_diff( $fg, $item  ) )[0];
+		if( isset( array_values( array_diff( $fg, $item ) )[0] ) ) {
+			$map['f'] = array_values( array_diff( $fg, $item ) )[0];
 		}
 	}
-	$map['g'] = array_values( array_diff( $fg, [$map['f']]  ) )[0];
+	$map['g'] = array_values( array_diff( $fg, [$map['f']] ) )[0];
 
 	//B
 	foreach ( $prop[6] as $item ) {
-		if( isset( array_values( array_diff( $prop[2][0], $item  ) )[0] ) ) {
-			$map['b'] = array_values( array_diff( $prop[2][0], $item  ) )[0];
+		if( isset( array_values( array_diff( $prop[2][0], $item ) )[0] ) ) {
+			$map['b'] = array_values( array_diff( $prop[2][0], $item ) )[0];
 		}
 	}
 
@@ -78,13 +87,13 @@ foreach ( $data as $signal ) {
 		if( count( $let ) === 2 ) $var2 = $let;
 		if( count( $let ) === 3 ) $var3 = $let;
 	}
-	$map['e'] = array_values( array_diff( $var3, $var2  ) )[0];
+	$map['e'] = array_values( array_diff( $var3, $var2 ) )[0];
 
 	// C
-	$map['c'] = array_values( array_diff( $prop[2][0], $map  ) )[0];
+	$map['c'] = array_values( array_diff( $prop[2][0], $map ) )[0];
 
 	// D
-	$map['d'] = array_values( array_diff( $prop[7][0], $map  ) )[0];
+	$map['d'] = array_values( array_diff( $prop[7][0], $map ) )[0];
 
 	$map = array_flip( $map);
 
@@ -96,31 +105,5 @@ foreach ( $data as $signal ) {
 
 	$sum += (int) $nums;
 }
-
-
-
-function count_number( $sig, $map ) {
-
-	$signal = [];
-	foreach ( str_split( $sig ) as $letter ) {
-		$signal[] = $map[$letter];
-	}
-	sort( $signal );
-	$signal = join( '', $signal);
-
-	switch ($signal) {
-		case 'abcdef':    return 0;
-		case 'bc':    return 1;
-		case 'abdeg':    return 2;
-		case 'abcdg':    return 3;
-		case 'bcfg':    return 4;
-		case 'acdfg':    return 5;
-		case 'acdefg':    return 6;
-		case 'abc':    return 7;
-		case 'abcdefg':    return 8;
-		case 'abcdfg':    return 9;
-	}
-}
-
 
 echo 'Part 2: ' . $sum . PHP_EOL;

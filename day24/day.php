@@ -1,8 +1,6 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
 $instructions = [];
 foreach ( $input as $line ) {
@@ -53,37 +51,3 @@ function solve( $inst, $part ) {
 echo 'Part 1: ' . solve( $instructions, 1 ) . PHP_EOL;
 
 echo 'Part 2: ' . solve( $instructions, 2 ) . PHP_EOL;
-
-//function aul( $inp, $instructions ) {
-//	$inp = str_split( $inp );
-//
-//	$v['w'] = $v['x'] = $v['y'] = $v['z'] = 0;
-//
-//	foreach ( $instructions as $i ) {
-//		switch ( $i[0] ) {
-//			case 'inp':
-//				$v[ $i[1] ] = (int) array_shift( $inp );
-//				break;
-//			case 'add':
-//				$v[ $i[1] ] += is_numeric( $i[2] ) ? $i[2] : $v[ $i[2] ];
-//				break;
-//			case 'mul':
-//				$v[ $i[1] ] *= is_numeric( $i[2] ) ? $i[2] : $v[ $i[2] ];
-//				break;
-//			case 'div':
-//				$v[ $i[1] ] = (int) floor( $v[ $i[1] ] / $i[2] );
-//				break;
-//			case 'mod':
-//				$v[ $i[1] ] = $v[ $i[1] ] % $i[2];
-//				break;
-//			case 'eql':
-//				$v[ $i[1] ] = $v[ $i[1] ] == ( is_numeric( $i[2] ) ? $i[2] : $v[ $i[2] ] ) ? 1 : 0;
-//				break;
-//		}
-//	}
-//
-//	if( $v['z'] === 0 ) {
-//		return true;
-//	}
-//	return false;
-//}

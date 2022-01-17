@@ -1,10 +1,6 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
-//$input = file( 'input2.txt', FILE_IGNORE_NEW_LINES );
-//$input = file( 'input3.txt', FILE_IGNORE_NEW_LINES );
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
 // Prepare scans arrays
 foreach ( $input as $line ) {
@@ -191,6 +187,9 @@ function translate_scan_by_offset( $scan, $vector, $i, $translations ) {
 	return $translated;
 }
 
+
+// PART 1
+
 // Get all distances between points
 foreach( $scans as $a => $scan ) {
 	$distances[$a] = calc_distance( $scan );
@@ -262,6 +261,7 @@ foreach ( $scans as $scan ) {
 echo 'Part 1: ' . count( array_count_values( $probes) ) . PHP_EOL;
 
 
+// PART 2
 
 function distance($vector1, $vector2) {
 	$n = count($vector1);

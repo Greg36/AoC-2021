@@ -1,11 +1,7 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 $input = $input[0];
-
-//$input = 'A0016C880162017C3686B18A3D4780';
 
 // Convert input to binary
 $code = '';
@@ -18,7 +14,7 @@ foreach ( $input as $num ) {
 global $v;
 $v = 0;
 
-function parse_code( $bin, $parts = [] ) {
+function parse_code( $bin ) {
 	global $v;
 
 	// Parse header
@@ -58,6 +54,7 @@ function parse_code( $bin, $parts = [] ) {
 
 function detect_packet_length( $bin, $count ) {
 	$length = 0;
+
 	while( $count ) {
 		$type = substr( $bin, 3, 3);
 		$bin = substr( $bin, 6);
@@ -69,15 +66,19 @@ function detect_packet_length( $bin, $count ) {
 				$bin = substr( $bin, 5);
 				$length += 5;
 			}
+
 			$bin = substr( $bin, 5);
 			$length += 5;
+
 		} else {
+
 			$l = ( $bin[0] === '0' ) ? 15 : 11;
 			$length += $l;
 			$bin = substr( $bin, 1);
 			$length++;
 
 			$packets = base_convert( substr( $bin, 0, $l), 2, 10);
+
 			if( $l == 15 ) {
 				$length += (int) $packets;
 				$bin = substr( $bin, ( (int) $packets + $l) );
@@ -99,9 +100,6 @@ function detect_packet_length( $bin, $count ) {
 	return $length;
 }
 
-
 parse_code( $code );
 
 echo 'Part 1: ' . $v . PHP_EOL;
-
-// echo 'Part 2: ' . $correct . PHP_EOL;

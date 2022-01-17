@@ -1,10 +1,6 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
-//$input = file( 'input2.txt', FILE_IGNORE_NEW_LINES );
-//$input = file( 'input3.txt', FILE_IGNORE_NEW_LINES );
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
 $steps = [];
 
@@ -31,7 +27,6 @@ foreach ( $input as $line ) {
 
 // [z][y][x]
 $cube = [];
-
 foreach ( $steps as $step ) {
 	for ( $z = $step['z'][0]; $z <= $step['z'][1]; $z++ ) {
 		for ( $y = $step['y'][0]; $y <= $step['y'][1]; $y++ ) {
@@ -50,5 +45,3 @@ foreach ( $cube as $z ) {
 }
 
 echo 'Part 1: ' . $on . PHP_EOL;
-
-// echo 'Part 2: ' . $correct . PHP_EOL;

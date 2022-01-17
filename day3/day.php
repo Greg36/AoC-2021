@@ -1,43 +1,38 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
-
-//$total = count( $input ) / 2;
-//
-//$gamma = [];
-//$epsilon = [];
-//
-//for ( $i = 0; $i < 12; $i++) {
-//	$val = 0;
-//
-//	foreach ( $input as $item ) {
-//		$val += ( bindec( $item ) >> $i ) % 2;
-//	}
-//
-//	if( $val >= $total ) $gamma[] = 1; else $gamma[] = 0;
-//
-//}
-//$epsilon = $gamma;
-//$gamma = join( '', array_reverse( $gamma ));
-//
-//foreach ( $epsilon as $key => $item ) {
-//	if( $item ) {
-//		$epsilon[ $key ] = '0';
-//	} else {
-//		$epsilon[ $key ] = '1';
-//	}
-//}
-//
-//$epsilon = join( '', array_reverse( $epsilon ) );
-//
-//
-// echo 'Part 1: ' . bindec( $gamma) * bindec( $epsilon) . PHP_EOL;
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
 
-$input2 = $input;
+// PART 1
 
+$total = count( $input ) / 2;
+
+$gamma = [];
+for ( $i = 0; $i < 12; $i++) {
+	$val = 0;
+
+	foreach ( $input as $item ) {
+		$val += ( bindec( $item ) >> $i ) % 2;
+	}
+
+	if( $val >= $total ) $gamma[] = 1; else $gamma[] = 0;
+}
+
+// Get the opposite numbers from most popular
+$epsilon = $gamma;
+foreach ( $epsilon as $key => $item ) {
+	$epsilon[ $key ] = $item ? '0' : '1';
+}
+
+$gamma   = join( '', array_reverse( $gamma ) );
+$epsilon = join( '', array_reverse( $epsilon ) );
+
+echo 'Part 1: ' . bindec( $gamma) * bindec( $epsilon) . PHP_EOL;
+
+
+// PART 2
+
+$input_orig = $input;
 
 for ( $i = 0; $i < 12; $i++) {
 
@@ -46,15 +41,12 @@ for ( $i = 0; $i < 12; $i++) {
 	// Check most popular
 	$val = 0;
 	$num = 0;
-
 	foreach ( $input as $item ) {
 		$val += (int) $item[$i];
 	}
 
-	if( $val >= (count( $input ) / 2) ) {
-		// its 1
-		$num = 1;
-	}
+	// its 1
+	if( $val >= ( count( $input ) / 2 ) ) $num = 1;
 
 	foreach ( $input as $key => $item ) {
 		if( count( $input ) === 1 ) break;
@@ -63,10 +55,10 @@ for ( $i = 0; $i < 12; $i++) {
 		}
 	}
 }
-$ox = bindec( array_values( $input)[0] );
+$oxygen = bindec( array_values( $input )[0] );
 
-$input = $input2;
 
+$input = $input_orig;
 
 for ( $i = 0; $i < 12; $i++) {
 
@@ -75,17 +67,11 @@ for ( $i = 0; $i < 12; $i++) {
 	// Check most popular
 	$val = 0;
 	$num = 0;
-
 	foreach ( $input as $item ) {
 		$val += (int) $item[$i];
 	}
 
-	if( $val < (count( $input ) / 2) ) {
-		// its 1
-		$num = 1;
-	} else {
-		$num = 0;
-	}
+	$num = $val < (count( $input ) / 2) ? 1 : 0;
 
 	foreach ( $input as $key => $item ) {
 		if( count( $input ) === 1 ) break;
@@ -95,6 +81,6 @@ for ( $i = 0; $i < 12; $i++) {
 	}
 }
 
-$co = bindec( array_values( $input)[0] );
+$carbondioxide = bindec( array_values( $input )[0] );
 
-echo 'Part 2: ' . $ox * $co . PHP_EOL;
+echo 'Part 2: ' . $oxygen * $carbondioxide . PHP_EOL;

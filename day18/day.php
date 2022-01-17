@@ -1,19 +1,14 @@
 <?php
 
-require_once '../lib/lib.php';
 ini_set('xdebug.max_nesting_level', 1024);
 
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
-//$input = file( 'input2.txt', FILE_IGNORE_NEW_LINES );
-
-//$input = [];
-//$input[0] = str_split( '[7,[6,[5,[11,[1,2]]]][1,[5,[2,[2,2]]]]]' );
-//$input[0] = str_split( '[[[11,7][1,2]][3,4]]' );
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
 
 function explode_num( $chain ) {
 	$nest = 0;
 	$did_explode = false;
+
 	do {
 		if( current( $chain ) === '[' ) {
 			$nest++;
@@ -50,10 +45,6 @@ function explode_num( $chain ) {
 	} while( next( $chain ) !== false );
 
 	reset( $chain );
-
-//	if( $did_explode) {
-//		echo 'EXP: '.  join( '', $chain) . PHP_EOL;
-//	}
 
 	return [
 		'chain' => $chain,
@@ -104,10 +95,6 @@ function split_number( $chain ) {
 		}
 	} while( next( $chain ) !== false );
 
-//	if( $did_split) {
-//		echo 'SPL: '.  join( '', $chain) . PHP_EOL;
-//	}
-
 	return [
 		'chain' => $chain,
 		'splited' => $did_split
@@ -131,13 +118,11 @@ function reduce_chain( $chain ) {
 }
 
 function calc_magnitude( $chain, $level = 4 ) {
-	$reduced = 0;
 	reset( $chain );
 	$found = false;
 	$nest = 0;
 
 	do {
-
 		if( current( $chain ) === '[' ) {
 			$nest++;
 		} else if( current( $chain ) === ']' ) {
@@ -154,12 +139,10 @@ function calc_magnitude( $chain, $level = 4 ) {
 			$found = true;
 			break;
 		}
+
 	} while( next( $chain ) !== false );
 
-	if( ! $found ) {
-		$level--;
-	}
-
+	if( ! $found ) $level--;
 
 	if( $level == 0 ) {
 		return $chain[0];
@@ -169,17 +152,22 @@ function calc_magnitude( $chain, $level = 4 ) {
 
 	return $chain;
 }
+
+
+// PART 1
+
 $input_orig = $input;
 $state = array_shift( $input );
 foreach ( $input as $line ) {
 	$state = join( '', reduce_chain( str_split( '[' . $state . ',' . $line . ']' ) ) );
 }
 
-
-
 echo 'Part 1: ' . calc_magnitude( str_split( $state ) ) . PHP_EOL;
 
 
+// PART 2
+
+// Get all possible calculations to run
 $torun = [];
 foreach ( $input_orig as $x => $first ) {
 	foreach ( $input_orig as $y => $second ) {

@@ -1,12 +1,10 @@
 <?php
 
-//require_once '../lib/lib.php';
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
-//$input = file( 'input2.txt', FILE_IGNORE_NEW_LINES );
-
+global $height, $width;
 $height = count( $input );
-$width = strlen( $input[0] );
+$width  = strlen( $input[0] );
 
 $map = [];
 foreach ( $input as $item ) {
@@ -14,8 +12,11 @@ foreach ( $input as $item ) {
 	$map[] = $row;
 }
 
-define( 'ROW', strlen( $input[0] ) * 5 );
-define( 'COL', count( $input ) * 5 );
+define( 'ROW', strlen( $input[0] ) );
+define( 'COL', count( $input ) );
+
+
+// PART 1
 
 // Structure for information of each cell
 class cell {
@@ -33,10 +34,11 @@ class cell {
 // Utility method to check whether a point is
 // inside the grid or not
 function isInsideGrid($i, $j) {
-	return ($i >= 0 && $i < ROW && $j >= 0 && $j < COL);
+	global $height, $width;
+	return ($i >= 0 && $i < $width && $j >= 0 && $j < $height);
 }
 
-// Sort function
+// Sort routes based on distance
 function sr( $a, $b ) {
 	if( $a->distance == $b->distance ) {
 		if( $a->x != $b->x ) {
@@ -49,17 +51,12 @@ function sr( $a, $b ) {
 	return ( $a->distance - $b->distance );
 }
 
-// Method returns minimum cost to reach bottom
-// right from top left
+// Method returns minimum cost to reach bottom right
+// from top left calculating the best distance to
+// each cell using Dijkstra
 function shortest($grid, $row, $col) {
 
-	$dis = array_fill( 0, $col, array_fill( 0, $row, 0));
-
-	for ($i = 0; $i < $row; $i++) {
-	    for ( $j = 0; $j < $col; $j++ ) {
-		    $dis[ $i ][ $j ] = 1000000000;
-	    }
-    }
+	$distances = array_fill( 0, $col, array_fill( 0, $row, 1000000000));
 
     $dx = [-1, 0, 1, 0];
     $dy = [0, 1, 0, -1];
@@ -67,7 +64,7 @@ function shortest($grid, $row, $col) {
     $st = [];
     $st[] = new cell(0, 0, 0);
 
-    $dis[0][0] = $grid[0][0];
+    $distances[0][0] = $grid[0][0];
 
     while ( ! empty( $st ) ) {
 
@@ -81,23 +78,24 @@ function shortest($grid, $row, $col) {
 	        if (!isInsideGrid($x, $y))
 		        continue;
 
-	        if ($dis[$x][$y] > $dis[$k->x][$k->y] + $grid[$x][$y]  ) {
-
-		        $dis[$x][$y] = $dis[$k->x][$k->y] + $grid[$x][$y];
-		        $st[] = new cell($x, $y, $dis[$x][$y]);
+	        if ($distances[$x][$y] > $distances[$k->x][$k->y] + $grid[$x][$y] ) {
+		        $distances[$x][$y] = $distances[$k->x][$k->y] + $grid[$x][$y];
+		        $st[] = new cell($x, $y, $distances[$x][$y]);
 	        }
         }
 
 	    usort($st, 'sr');
     }
 
-    return $dis[$row - 1][$col - 1];
+    return $distances[$row - 1][$col - 1];
 }
 
-//$shortest  = shortest( $map, ROW, COL );
-//$shortest -= $map[0][0];
-//
-//echo 'Part 1: ' . $shortest . PHP_EOL;
+$shortest  = shortest( $map, $width, $height );
+$shortest -= $map[0][0];
+
+echo 'Part 1: ' . $shortest . PHP_EOL;
+
+// PART 2
 
 $new_map = [];
 
@@ -118,7 +116,10 @@ for( $k = 0; $k < 5; $k++ ) {
 	}
 }
 
-$shortest  = shortest( $new_map, ROW, COL );
+$width  = $width  * 5;
+$height = $height * 5;
+
+$shortest  = shortest( $new_map, $width, $height );
 $shortest -= $map[0][0];
 
 echo 'Part 2: ' . $shortest . PHP_EOL;

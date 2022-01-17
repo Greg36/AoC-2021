@@ -1,16 +1,11 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
 $mcstart = microtime( true );
 
 $player1 = 1 - 1;
 $player2 = 3 - 1;
-
-//$player1 = 4 - 1;
-//$player2 = 8 - 1;
 
 
 // All possible 27 outcomes of 3 rolls

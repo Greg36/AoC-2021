@@ -1,8 +1,9 @@
 <?php
 
-require_once '../lib/lib.php';
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
+
+// PART 1
 
 $inc = 0;
 foreach ( $input as $key => $line ) {
@@ -14,16 +15,17 @@ foreach ( $input as $key => $line ) {
 echo 'Part 1: ' . $inc . PHP_EOL;
 
 
-
 // PART 2
 
-$sum_inc = 0;
-$prev = $input[0] + $input[1] + $input[2];
+$sum_inc  = 0;
+$previous = $input[0] + $input[1] + $input[2];
+
 for ($i = 0; $i < ( count( $input ) - 2 ); $i++ ) {
-	$cur = $input[$i] + $input[$i + 1] + $input[$i + 2];
+	$current = $input[$i] + $input[$i + 1] + $input[$i + 2];
 	if( $i === 0 ) continue;
-	if( $cur > $prev ) $sum_inc++;
-	$prev = $cur;
+
+	if( $current > $previous ) $sum_inc++;
+	$previous = $current;
 }
 
- echo 'Part 2: ' . $sum_inc . PHP_EOL;
+echo 'Part 2: ' . $sum_inc . PHP_EOL;

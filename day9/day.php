@@ -1,12 +1,8 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
-//$input = file( 'input2.txt', FILE_IGNORE_NEW_LINES );
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
 $map = [];
-
 foreach ( $input as $key => $row ) {
 	$temp = str_split( $row );
 	foreach ( $temp as $item ) {
@@ -14,31 +10,34 @@ foreach ( $input as $key => $row ) {
 	}
 }
 
-//$sec = 0;
-//foreach ( $map as $y => $row ) {
-//	foreach ( $row as $x => $item ) {
-//
-//		// top
-//		if( isset( $map[$y - 1][$x] ) && $map[$y - 1][$x] <= $item ) continue;
-//
-//		// right
-//		if( isset( $map[$y][$x + 1] ) && $map[$y][$x + 1] <= $item ) continue;
-//
-//		// left
-//		if( isset( $map[$y][$x - 1] ) && $map[$y][$x - 1] <= $item ) continue;
-//
-//		// bottom
-//		if( isset( $map[$y + 1][$x] ) && $map[$y + 1][$x] <= $item ) continue;
-//
-//		$sec += 1;
-//		$sec += $item;
-//	}
-//}
+
+// PART 1
+
+$sec = 0;
+foreach ( $map as $y => $row ) {
+	foreach ( $row as $x => $item ) {
+
+		// top
+		if( isset( $map[$y - 1][$x] ) && $map[$y - 1][$x] <= $item ) continue;
+
+		// right
+		if( isset( $map[$y][$x + 1] ) && $map[$y][$x + 1] <= $item ) continue;
+
+		// left
+		if( isset( $map[$y][$x - 1] ) && $map[$y][$x - 1] <= $item ) continue;
+
+		// bottom
+		if( isset( $map[$y + 1][$x] ) && $map[$y + 1][$x] <= $item ) continue;
+
+		$sec += 1;
+		$sec += $item;
+	}
+}
+
+echo 'Part 1: ' . $sec . PHP_EOL;
 
 
-
-//echo 'Part 1: ' . $sec . PHP_EOL;
-
+// PART 2
 
 $low_points = [];
 foreach ( $map as $y => $row ) {
@@ -94,15 +93,7 @@ function fill_adjecent( $map, $x, $y, $start = false ) {
 		$map = fill_adjecent( $map, $x, $y + 1);
 	}
 
-	if( $start ) {
-//		foreach ( $map as $row ) {
-//			foreach ( $row as $item ) {
-//				echo $item;
-//			}
-//			echo PHP_EOL;
-//		}
-		return $area;
-	}
+	if( $start ) return $area;
 
 	return $map;
 }
@@ -110,12 +101,13 @@ function fill_adjecent( $map, $x, $y, $start = false ) {
 $areas = [];
 foreach ( $low_points as $point ) {
 	$areas[] = fill_adjecent( $map, $point[1], $point[0], true);
-//	echo PHP_EOL . '                    ' . PHP_EOL;
-	
 }
-$sec = 1;
+
+// Get 3 largest basins
 rsort( $areas );
 $areas = array_slice( $areas, 0, 3 );
+
+$sec = 1;
 foreach ( $areas as $item ) {
 	$sec = $sec * $item;
 }

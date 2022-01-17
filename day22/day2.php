@@ -1,10 +1,6 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
-//$input = file( 'input2.txt', FILE_IGNORE_NEW_LINES );
-//$input = file( 'input3.txt', FILE_IGNORE_NEW_LINES );
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
 $steps = [];
 
@@ -23,12 +19,6 @@ foreach ( $input as $line ) {
 	if( $dir ) $steps[] = $dir;
 }
 
-
-//$mcstart = microtime( true );
-//echo "<pre>\n";
-//$input = trim( str_replace( "\r", "", file_get_contents( "input.txt" ) ) );
-//
-//$lines = explode( "\n", $input );
 $cubes = [];
 
 foreach ( $steps as $step ) {
@@ -44,6 +34,8 @@ foreach ( $steps as $step ) {
 
 		// All axis must overlap for cuboids to overlap
 		if ( $ax <= $bx && $ay <= $by && $az <= $bz ) {
+			// Create new cuboid equal the overlapping area
+			// but with reversed singal
 			$overlap = [
 				'signal' => - $cube['signal'],
 				'x' => [ $ax, $bx ],

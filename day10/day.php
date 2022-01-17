@@ -1,9 +1,6 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
-//$input = file( 'input2.txt', FILE_IGNORE_NEW_LINES );
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
 $scores = [
 	')' => 3,
@@ -11,7 +8,6 @@ $scores = [
 	'}' => 1197,
 	'>' => 25137
 ];
-
 
 function swap_symbol( $char ) {
 	switch ( $char ) {
@@ -33,31 +29,37 @@ function swap_symbol_back( $char ) {
 	return false;
 }
 
-//$score = 0;
 
-//foreach ( $input as $line ) {
-//	$stack = [];
-//	$line = str_split( $line);
-//	foreach ( $line as $char ) {
-//		if( preg_match( '/[(<[{]/', $char) ) {
-//			$stack[] = $char;
-//			continue;
-//		}
-//		if( preg_match( '/[)\]}>]/', $char) ) {
-//			if( array_slice($stack, -1)[0] == swap_symbol($char) ){
-//				array_pop( $stack );
-//			} else {
-//				$score += $scores[$char];
-//				break;
-//			}
-//		}
-//	}
-//}
-//
-//
-//
-// echo 'Part 1: ' . $score . PHP_EOL;
+// PART 1
 
+$score = 0;
+
+foreach ( $input as $line ) {
+	$stack = [];
+	$line = str_split( $line);
+
+	foreach ( $line as $char ) {
+
+		if( preg_match( '/[(<[{]/', $char) ) {
+			$stack[] = $char;
+			continue;
+		}
+
+		if( preg_match( '/[)\]}>]/', $char) ) {
+			if( array_slice($stack, -1)[0] == swap_symbol($char) ) {
+				array_pop( $stack );
+			} else {
+				$score += $scores[$char];
+				break;
+			}
+		}
+	}
+}
+
+echo 'Part 1: ' . $score . PHP_EOL;
+
+
+// PART 2
 
 $scores = [
 	')' => 1,
@@ -72,11 +74,14 @@ foreach ( $input as $key => $line ) {
 	$stack = [];
 	$line = str_split( $line);
 	$corrupted = false;
+
 	foreach ( $line as $char ) {
+
 		if( preg_match( '/[(<[{]/', $char) ) {
 			$stack[] = $char;
 			continue;
 		}
+
 		if( preg_match( '/[)\]}>]/', $char) ) {
 			if( array_slice($stack, -1)[0] == swap_symbol($char) ){
 				array_pop( $stack );
@@ -89,7 +94,6 @@ foreach ( $input as $key => $line ) {
 
 	// Incomplete line
 	if( ! empty( $stack ) && ! $corrupted ) {
-
 		$score = 0;
 		$stack = array_reverse( $stack );
 
@@ -97,11 +101,16 @@ foreach ( $input as $key => $line ) {
 			$score = $score * 5;
 			$score += $scores[ swap_symbol_back( $item ) ];
 		}
+
 		$totals[] = $score;
 	}
 }
+
 sort( $totals );
+
+// Get the middle index
 $index = count( $totals );
 $index--;
 $index = floor($index / 2);
- echo 'Part 2: ' . $totals[$index] . PHP_EOL;
+
+echo 'Part 2: ' . $totals[$index] . PHP_EOL;

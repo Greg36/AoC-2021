@@ -1,29 +1,33 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
 $fishes = explode( ',', $input[0] );
 foreach ( $fishes as $key => $fish ) {
 	$fishes[$key] = (int) $fish;
 }
+$orig = $fishes;
 
-//// Days
-//for ($i = 0; $i < 80; $i++) {
-//	foreach ( $fishes as $key => $fish ) {
-//		if( $fish === 0 ) {
-//			$fishes[$key] = 6;
-//			$fishes[] = 8;
-//		} else {
-//			$fishes[$key]--;
-//		}
-//	}
-//}
-//
-// echo 'Part 1: ' . count( $fishes ) . PHP_EOL;
 
-// Days
+// PART 1
+
+for ($i = 0; $i < 80; $i++) {
+	foreach ( $fishes as $key => $fish ) {
+		if( $fish === 0 ) {
+			$fishes[$key] = 6;
+			$fishes[] = 8;
+		} else {
+			$fishes[$key]--;
+		}
+	}
+}
+
+echo 'Part 1: ' . count( $fishes ) . PHP_EOL;
+
+
+// PART 2
+
+$fishes = $orig;
 for ( $i = 0; $i <= 8; $i++ ) $days[$i] = 0;
 
 // Initial fishes

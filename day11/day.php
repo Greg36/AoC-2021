@@ -1,10 +1,6 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
-//$input = file( 'input2.txt', FILE_IGNORE_NEW_LINES );
-
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
 $map = [];
 foreach ( $input as $x => $row ) {
@@ -14,9 +10,9 @@ foreach ( $input as $x => $row ) {
 	}
 }
 
-
 global $flashes;
 $flashes = 0;
+
 function flash_fish( $map, $y, $x ) {
 	global $flashes;
 
@@ -24,7 +20,7 @@ function flash_fish( $map, $y, $x ) {
 	$map[$y][$x] = 'x';
 	$flashes++;
 
-	// Increase adjecent
+	// Increase adjacent
 	if( isset( $map[$y-1][$x-1] ) && is_numeric( $map[$y-1][$x-1] ) ) $map[$y-1][$x-1]++;
 	if( isset( $map[$y-1][$x]   ) && is_numeric( $map[$y-1][$x]   ) ) $map[$y-1][$x]++;
 	if( isset( $map[$y-1][$x+1] ) && is_numeric( $map[$y-1][$x+1] ) ) $map[$y-1][$x+1]++;
@@ -67,17 +63,15 @@ function check_map( $map, $step ) {
 	foreach ( $map as $row ) {
 		$sum += array_sum( $row );
 	}
-	if( $sum === 0 ) {
-		echo 'Part 2: ' . ($step + 1) . PHP_EOL;
-		die();
-	}
+	if( $sum === 0 ) return $step + 1;
+
+	return false;
 }
 
-for ($i = 0; $i < 1000000; $i++) {
 
-	$do_flash = scan_fish( $map);
+function take_step( $map, $i ) {
 
-
+	$do_flash = scan_fish( $map );
 
 	if( $do_flash ) {
 		// Flash fish
@@ -101,24 +95,32 @@ for ($i = 0; $i < 1000000; $i++) {
 		}
 	}
 
-
-
 	$map = reset_map( $map );
 
-	check_map( $map, $i );
+	$check = check_map( $map, $i );
 
+	if( $check ) return $check;
 
-//	if( $i == 99 ) {
-//		foreach ( $map as $row ) {
-//			echo join( '', $row);
-//			echo PHP_EOL;
-//		}
-//		die();
-//	}
-
+	return $map;
 }
 
+// PART 1
+$map_orig = $map;
+for ($i = 0; $i < 100; $i++) {
+	$map = take_step( $map, $i );
+}
 
- echo 'Part 1: ' . $flashes . PHP_EOL;
+echo 'Part 1: ' . $flashes . PHP_EOL;
 
-// echo 'Part 2: ' . $correct . PHP_EOL;
+
+// PART 2
+
+$map = $map_orig;
+$i = 0;
+while( true ) {
+	$map = take_step( $map, $i );
+	if( is_numeric( $map ) ) break;
+	$i++;
+}
+
+echo 'Part 2: ' . $map . PHP_EOL;

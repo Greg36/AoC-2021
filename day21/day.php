@@ -1,14 +1,9 @@
 <?php
 
-require_once '../lib/lib.php';
-
-$input = file( 'input.txt', FILE_IGNORE_NEW_LINES );
+$input = file( dirname(__FILE__) . '/input.txt', FILE_IGNORE_NEW_LINES );
 
 $player1 = 1;
 $player2 = 3;
-
-//$player1 = 4;
-//$player2 = 8;
 
 $score1 = 0;
 $score2 = 0;
@@ -41,6 +36,4 @@ while ( $score1 < 1000 && $score2 < 1000 ) {
 
 $looser = min( $score1, $score2 );
 
- echo 'Part 1: ' . ( $looser * $rolls ) . PHP_EOL;
-
-// echo 'Part 2: ' . $correct . PHP_EOL;
+echo 'Part 1: ' . ( $looser * $rolls ) . PHP_EOL;
