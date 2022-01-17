@@ -3,9 +3,10 @@
 $start = microtime(true);
 
 function run_day( $day ) {
+	$day = str_pad( $day, 2, '0', 0 );
 	if( file_exists( "./day{$day}/day.php" ) ) {
 		$day_time = microtime(true);
-		echo "\033[32mDay: " . $day . "\033[0m\n";
+		echo "\033[32mDay: " . (int) $day . "\033[0m\n";
 		require_once( dirname(__FILE__) . "./day{$day}/day.php" );
 
 		// Some days have separate file for part 2
