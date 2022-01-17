@@ -14,7 +14,7 @@ foreach ( $input as $num ) {
 global $v;
 $v = 0;
 
-function parse_code( $bin, $parts = [] ) {
+function parse_code_b( $bin, $parts = [] ) {
 	global $v;
 
 	// Parse header
@@ -43,27 +43,27 @@ function parse_code( $bin, $parts = [] ) {
 		$bin = substr( $bin, $length + 1 );
 
 		// Detect packet length
-		if( $length == 11 ) $packets = detect_packet_length( $bin, $packets );
+		if( $length == 11 ) $packets = detect_packet_length_b( $bin, $packets );
 
-		$sub_parts = parse_code( substr( $bin, 0, $packets), [] );
+		$sub_parts = parse_code_b( substr( $bin, 0, $packets), [] );
 		$bin = substr( $bin,  $packets );
 
 		// Process sub-packets
 		if( !empty( $sub_parts ) ) {
-			$parts[] = parse_sub_parts( $type, $sub_parts );
+			$parts[] = parse_sub_parts_b( $type, $sub_parts );
 		}
 	}
 
 
 	if( strlen( $bin ) >= 11 ) {
-		$parts = parse_code( $bin, $parts );
+		$parts = parse_code_b( $bin, $parts );
 	}
 
 	return $parts;
 }
 
 
-function detect_packet_length( $bin, $count ) {
+function detect_packet_length_b( $bin, $count ) {
 	$length = 0;
 
 	while( $count ) {
@@ -91,7 +91,7 @@ function detect_packet_length( $bin, $count ) {
 				$length += (int) $packets;
 				$bin = substr( $bin, ( (int) $packets + $l) );
 			} else {
-				$sub_length = detect_packet_length( substr( $bin, $l), $packets );
+				$sub_length = detect_packet_length_b( substr( $bin, $l), $packets );
 				$length += $sub_length;
 				$bin = substr( $bin, $sub_length + $l );
 			}
@@ -108,7 +108,7 @@ function detect_packet_length( $bin, $count ) {
 	return $length;
 }
 
-function parse_sub_parts( $type, $sub_parts ) {
+function parse_sub_parts_b( $type, $sub_parts ) {
 
 	switch ( $type ) {
 		case '000': // 0
@@ -134,6 +134,6 @@ function parse_sub_parts( $type, $sub_parts ) {
 }
 
 
-$p = parse_code( $code );
+$p = parse_code_b( $code );
 
 echo 'Part 2: ' . array_sum( $p ) . PHP_EOL;
